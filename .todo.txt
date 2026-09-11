@@ -1,0 +1,70 @@
+Act as a Principal Spring Boot Starter Architect and Debugging Engineer.
+
+We have already completed root cause analysis.
+
+Current conclusion:
+
+JwtAutoConfiguration is loaded AFTER SecurityCoreAutoConfiguration.
+
+Because of this ordering:
+
+@AutoConfiguration(after = SecurityCoreAutoConfiguration.class)
+
+SecurityCoreAutoConfiguration builds SecurityFilterChain before JwtAuthenticationFilter bean becomes available.
+
+Result:
+
+- jwtAuthenticationFilterProvider.getIfAvailable() returns null
+- JwtAuthenticationFilter is never added to SecurityFilterChain
+- SecurityContext is never populated
+- Requests remain unauthenticated
+- Tests receive 401 instead of expected 200/403
+
+Your task:
+
+1. Verify this conclusion directly from code.
+2. Confirm where JwtAuthenticationFilter bean is created.
+3. Confirm SecurityFilterChain is built before JwtAuthenticationFilter becomes available.
+4. Apply ONLY the minimal fix required.
+
+Allowed change:
+
+Change auto-configuration ordering if and only if code verification proves it is the root cause.
+
+Example:
+
+@AutoConfiguration(before = SecurityCoreAutoConfiguration.class)
+
+Restrictions:
+
+- Do NOT refactor.
+- Do NOT rename classes.
+- Do NOT move files.
+- Do NOT modify package structure.
+- Do NOT touch JWT generation logic.
+- Do NOT change public APIs.
+- Do NOT change tests.
+- Do NOT introduce new features.
+- Do NOT modify unrelated code.
+
+After applying the patch:
+
+1. Run full verification.
+2. Run mvn clean test.
+3. Verify JwtAuthenticationFilter is present in SecurityFilterChain.
+4. Verify SecurityContext receives Authentication.
+5. Verify public endpoints return expected status.
+6. Verify protected endpoints return 200 when authorized.
+7. Verify authorization failures return 403 instead of 401.
+8. Verify no new regressions are introduced.
+
+Output required:
+
+- Verified root cause
+- Exact file changed
+- Exact code diff
+- Test results before fix
+- Test results after fix
+- Confirmation that project is safe to push to GitHub
+
+Do not make any additional changes beyond what is required to fix this specific issue.

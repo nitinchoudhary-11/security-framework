@@ -1,0 +1,8 @@
+com.dollop.app.autoconfigure.SecurityCoreAutoConfiguration
+com.dollop.app.autoconfigure.JwtAutoConfiguration
+com.dollop.app.autoconfigure.OtpAutoConfiguration
+com.dollop.app.autoconfigure.TwoFactorAutoConfiguration
+com.dollop.app.autoconfigure.AuditAutoConfiguration
+com.dollop.app.autoconfigure.RbacAutoConfiguration
+com.dollop.app.autoconfigure.RateLimitAutoConfiguration
+com.dollop.app.autoconfigure.VerificationAutoConfiguration
