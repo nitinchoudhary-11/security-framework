@@ -10,9 +10,39 @@
 	</parent>
 	<groupId>io.github.dollopinfotech</groupId>
 	<artifactId>security-framework</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>1.0.0</version>
 	<name>security-framework</name>
 	<description>Spring Boot Security Framework starter library providing stateless JWT authentication, Refresh Token Rotation, and expression-based RBAC capabilities.</description>
+	
+	<url>https://github.com/nitinchoudhary-11/security-framework</url>
+
+<licenses>
+    <license>
+        <name>MIT License</name>
+        <url>https://opensource.org/licenses/MIT</url>
+    </license>
+</licenses>
+
+<developers>
+    <developer>
+        <id>nitinchoudhary</id>
+        <name>Nitin Choudhary</name>
+    </developer>
+</developers>
+
+<scm>
+    <connection>
+        scm:git:git://github.com/nitinchoudhary-11/security-framework.git
+    </connection>
+    <developerConnection>
+        scm:git:ssh://github.com/nitinchoudhary-11/security-framework.git
+    </developerConnection>
+    <url>
+        https://github.com/nitinchoudhary-11/security-framework
+    </url>
+</scm>
+	
+	
 	<properties>
 		<java.version>17</java.version>
 	</properties>
@@ -123,6 +153,9 @@
 			</plugin>
 		</plugins>
 	</build>
+	
+	
+	
 
 </project>
 
