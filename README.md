@@ -9,56 +9,73 @@ An enterprise-grade, opinionated Spring Boot starter library delivering stateles
 ---
 
 ## Architecture Overview
+ Features
+Stateless JWT Authentication
+Refresh Token Rotation (RTR)
+JTI-Based Token Revocation
+Role-Based Access Control (RBAC)
+Role Hierarchy Support
+Custom Permission Evaluation
+Account Lock Detection
+Auto Configuration
+Security Exception Handling
+SPI-Based Extensibility
+OTP Infrastructure
+Two-Factor Authentication Infrastructure
+Audit Event Infrastructure
+Verification Infrastructure
+Production-Ready Spring Security Integration
 
-```
-[ HTTP Request ] ──► [ JwtAuthenticationFilter ]
-                            │
-                            ├─► Validates ACCESS Key Signature (JJWT 0.12.7)
-                            ├─► Checks JTI Revocation (TokenRevocationStore)
-                            ├─► Loads Live User & Authorities (UserLookupProvider SPI)
-                            ├─► Enforces Account-Lock State
-                            └─► Populates SecurityContextHolder
-                                      │
-                                      ▼
-                      [ Method Security / SpEL ]
-                            │
-                            ├─► @PreAuthorize("hasRole('ADMIN')") ──► RoleHierarchyProvider
-                            └─► @PreAuthorize("hasPermission(#doc, 'write')") ──► ResourcePermissionEvaluator
-```
-
----
-
-## Quick Start
-
-### 1. Add Maven Dependency
-
-```xml
+Architecture Overview
+[ HTTP Request ]
+        │
+        ▼
+[ JwtAuthenticationFilter ]
+        │
+        ├── Validate JWT Signature
+        ├── Check Token Expiry
+        ├── Check JTI Revocation
+        ├── Load User via UserLookupProvider
+        ├── Validate Account Status
+        └── Populate SecurityContext
+                    │
+                    ▼
+        [ Spring Security ]
+                    │
+                    ▼
+        [ Method Security ]
+                    │
+        ├── hasRole(...)
+        ├── hasAuthority(...)
+        └── hasPermission(...)
+        
+Installation
+Maven
 <dependency>
     <groupId>io.github.dollopinfotech</groupId>
     <artifactId>security-framework</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>1.0.0</version>
 </dependency>
-```
 
-### 2. Configure `application.yml`
-
-```yaml
+Configuration
+application.yml
 security:
   core:
     bcrypt-strength: 12
     public-urls:
       - /api/v1/auth/**
       - /actuator/health
+
   jwt:
-    access-secret: "v9y$B&E)H@MbQeThWmZq4t7w!z%C*F-JaNdRfUjXn2r5u8x/A?D(G+KbPeShVkYp"
-    refresh-secret: "gVkYp3s6v9y$B&E)H@McQfTjWnZr4u7w!z%C*F-JaNdRgUkXp2s5v8x/A?D(G+Kb"
+    access-secret: "YOUR_ACCESS_SECRET"
+    refresh-secret: "YOUR_REFRESH_SECRET"
+
   rbac:
     enabled: true
-```
+UserLookupProvider SPI
 
-### 3. Implement `UserLookupProvider` SPI
+The consuming application must provide a user lookup implementation.
 
-```java
 @Component
 public class UserLookupProviderImpl implements UserLookupProvider {
 
@@ -70,37 +87,111 @@ public class UserLookupProviderImpl implements UserLookupProvider {
 
     @Override
     public Optional<SecurityPrincipal> findByIdentifier(String identifier) {
-        return userRepository.findByEmail(identifier).map(UserAdapter::new);
+        return userRepository.findByEmail(identifier)
+                .map(UserAdapter::new);
     }
 }
-```
+SecurityPrincipal Implementation
+public class UserAdapter implements SecurityPrincipal {
 
----
+    private final User user;
 
-## Configuration Reference
+    public UserAdapter(User user) {
+        this.user = user;
+    }
 
-| Property Name | Default Value | Required? | Description |
-|:---|:---:|:---:|:---|
-| `security.core.enabled` | `true` | Optional | Toggles security framework auto-configuration. |
-| `security.core.bcrypt-strength` | `12` | Optional | Rounds for BCrypt password hashing. |
-| `security.core.public-urls` | `[]` | Optional | Endpoints that bypass authentication. |
-| `security.core.allowed-origins` | `[]` | Optional | Allowed CORS origins (no wildcard default). |
-| `security.jwt.access-secret` | *None* | **Required for JWT** | Secret key for access token signing (min 256-bit). |
-| `security.jwt.refresh-secret` | *None* | **Required for JWT** | Secret key for refresh token signing (min 256-bit). |
-| `security.jwt.access-token-expiration-minutes` | `15` | Optional | Access token TTL in minutes. |
-| `security.jwt.refresh-token-expiration-days` | `7` | Optional | Refresh token TTL in days. |
-| `security.jwt.cookie-name` | *None* | Optional | HttpOnly cookie name for access tokens. |
-| `security.rbac.enabled` | `true` | Optional | Activates method security and role hierarchy. |
+    @Override
+    public String getIdentifier() {
+        return user.getEmail();
+    }
 
----
+    @Override
+    public Set<String> getAuthorities() {
+        return Set.of("ROLE_USER");
+    }
 
-## Production Deployment Recommendations
+    @Override
+    public String getAuthProvider() {
+        return "LOCAL";
+    }
 
-- **Clustered Multi-Node Deployments:** Replace default `InMemoryTokenRevocationStore` with a distributed Redis or JDBC `TokenRevocationStore` `@Bean`.
-- **Secret Isolation:** Store `access-secret` and `refresh-secret` in environment variables or key vaults (AWS Secrets Manager / Vault). Never commit secrets to repository.
+    @Override
+    public boolean isAccountLocked() {
+        return false;
+    }
 
----
+    @Override
+    public boolean isMfaEnabled() {
+        return false;
+    }
+}
+RBAC Example
+@RestController
+public class UserController {
 
-## License
+    @PreAuthorize("hasRole('USER')")
+    @GetMapping("/user")
+    public String user() {
+        return "User Resource";
+    }
 
-Distributed under the Apache 2.0 License.
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/admin")
+    public String admin() {
+        return "Admin Resource";
+    }
+}
+Authentication Flow
+User authenticates.
+Framework generates JWT access token.
+Client sends token in Authorization header.
+JwtAuthenticationFilter validates token.
+UserLookupProvider loads current user.
+Authorities are loaded into SecurityContext.
+RBAC rules are evaluated.
+Request is processed.
+Configuration Reference
+Property	Default	Description
+security.core.enabled	true	Enables framework
+security.core.bcrypt-strength	12	BCrypt rounds
+security.core.public-urls	[]	Public endpoints
+security.jwt.access-secret	Required	Access token secret
+security.jwt.refresh-secret	Required	Refresh token secret
+security.jwt.access-token-expiration-minutes	15	Access token TTL
+security.jwt.refresh-token-expiration-days	7	Refresh token TTL
+security.rbac.enabled	true	Enables RBAC
+Extension Points
+
+The framework exposes SPI interfaces for customization:
+
+UserLookupProvider
+CurrentUserResolver
+RoleHierarchyProvider
+ResourcePermissionEvaluator
+AuditEventListener
+OtpSender
+EmailService
+SmsService
+NotificationSender
+Verified Features
+
+The following features have been tested through a separate consumer application:
+
+JWT Authentication
+Public URL Configuration
+Private Endpoint Protection
+RBAC Authorization
+Role Hierarchy
+User Role Access
+Admin Role Access
+Security Exception Handling
+Production Recommendations
+Use Redis or JDBC-based token revocation storage.
+Store secrets in environment variables or secret managers.
+Enable HTTPS in production.
+Rotate signing keys periodically.
+Monitor authentication and authorization events.
+License
+
+Apache License 2.0
+ 
