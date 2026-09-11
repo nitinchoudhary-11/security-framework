@@ -26,8 +26,7 @@ Audit Event Infrastructure
 Verification Infrastructure
 Production-Ready Spring Security Integration
 
-Architecture Overview
-[ HTTP Request ]
+ [ HTTP Request ]
         │
         ▼
 [ JwtAuthenticationFilter ]
@@ -48,7 +47,6 @@ Architecture Overview
         ├── hasRole(...)
         ├── hasAuthority(...)
         └── hasPermission(...)
-        
 Installation
 Maven
 <dependency>
